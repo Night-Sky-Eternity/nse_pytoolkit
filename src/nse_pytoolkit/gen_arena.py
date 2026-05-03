@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import cast
 
 from nse_pytoolkit.sentinels import FREE, MISSING, FreeType
 
@@ -129,7 +128,7 @@ class GenArena[T]:
                 raise FreeSlotError(msg)
             return default
 
-        return cast("T", value)
+        return value
 
     # ---------------------------------------------------------
 
@@ -212,4 +211,4 @@ class GenArena[T]:
             return default
 
         self._release(index)
-        return cast("T", value)
+        return value

@@ -8,11 +8,21 @@ if TYPE_CHECKING:
     from types import TracebackType
 
 __all__ = [
+    "BrokenContextStackError",
     "ContextCounter",
     "ContextStack",
     "LimitedContextStack",
     "LimitedContextStackMeta",
+    "MaxContextReEnterError",
 ]
+
+
+class BrokenContextStackError(RuntimeError):
+    """Raised when the context stack is in an invalid state on exit."""
+
+
+class MaxContextReEnterError(RuntimeError):
+    """Raised when a context is entered more times than its configured maximum."""
 
 
 class ContextCounter(Iterator[int], Sized):
@@ -69,7 +79,7 @@ class ContextStack(ABC):
         stack = self.__context_stack__.get()
         if stack is None:
             msg = f"{type(self).__name__} stack is None on __exit__"
-            raise RuntimeError(msg)
+            raise BrokenContextStackError(msg)
         stack.pop()
         return False
 
@@ -98,7 +108,7 @@ class LimitedContextStack(ContextStack, ABC, metaclass=LimitedContextStackMeta):
     def __enter__(self) -> Self:
         if not self.__context_semaphore__.acquire(blocking=False):
             msg = f"Cannot enter '{type(self).__name__}' context more than '{self.__context_max_entries__}'"
-            raise RuntimeError(msg)
+            raise MaxContextReEnterError(msg)
         try:
             return super().__enter__()
         except:
