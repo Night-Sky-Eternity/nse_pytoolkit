@@ -1,0 +1,7 @@
+[project]
+name = "nse-tools"
+version = "0.1.0"
+description = "Tools and types used throughout projects"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
