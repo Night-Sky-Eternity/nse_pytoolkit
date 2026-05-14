@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class Catches[E: BaseException]:
     exceptions: set[type[E]]
 
-    __slots__ = ["exceptions"]
+    __slots__ = ("exceptions",)
 
     def __init__(self, *exc: type[E]) -> None:
         self.exceptions = set(exc)
@@ -62,7 +62,7 @@ def catches[E: BaseException](*exc: type[E]) -> Catches[E]:
 class AddedCatches[E: BaseException]:
     exceptions: set[type[E]]
 
-    __slots__ = ["exceptions"]
+    __slots__ = ("exceptions",)
 
     def __init__(self, *exc: type[E]) -> None:
         self.exceptions = set(exc)

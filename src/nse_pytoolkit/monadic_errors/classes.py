@@ -1,6 +1,5 @@
 # src/monadic_errors/classes.py
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Concatenate, Never, Protocol
 
 if TYPE_CHECKING:
@@ -13,14 +12,14 @@ class Result[O, E: BaseException](Protocol):
         f: Callable[Concatenate[O, P], Result[U, F]],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[U, E | F]: ... # rust: and_then
+    ) -> Result[U, E | F]: ...  # rust: and_then
 
     def bind_err[U, F: BaseException, **P](
         self,
         f: Callable[Concatenate[E, P], Result[U, F]],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[U | O, F]: ... # rust: or_else
+    ) -> Result[U | O, F]: ...  # rust: or_else
 
     def map[U, **P](
         self,
@@ -59,9 +58,13 @@ class Result[O, E: BaseException](Protocol):
     ) -> D | E: ...
 
 
-@dataclass(slots=True, frozen=True)
 class Ok[O](Result[O, Never]):
     value: O
+
+    __slots__ = ("value",)
+
+    def __init__(self, value: O) -> None:
+        self.value = value
 
     def bind[U, F: BaseException, **P](
         self,
@@ -125,9 +128,13 @@ class Ok[O](Result[O, Never]):
         return default_factory(self.value, *args, **kwargs)
 
 
-@dataclass(slots=True, frozen=True)
 class Err[E: BaseException](Result[Never, E]):
     error: E
+
+    __slots__ = ("error",)
+
+    def __init__(self, error: E) -> None:
+        self.error = error
 
     def bind[U, F: BaseException, **P](
         self,

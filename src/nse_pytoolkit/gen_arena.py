@@ -1,5 +1,3 @@
-from dataclasses import dataclass, field
-
 from .sentinels import FREE, MISSING, FreeType
 
 __all__ = (
@@ -30,7 +28,6 @@ class FreeSlotError(ArenaError):
     """Handle refers to a free slot."""
 
 
-@dataclass(slots=True)
 class GenArena[T]:
     """Generational arena storing values with reusable slots.
 
@@ -44,9 +41,16 @@ class GenArena[T]:
         _free (list[int]): Stack of reusable free slot indices.
     """
 
-    _values: list[T | FreeType] = field(default_factory=list, repr=False)
-    _gens: list[int] = field(default_factory=list, repr=False)
-    _free: list[int] = field(default_factory=list, repr=False)
+    _values: list[T | FreeType]
+    _gens: list[int]
+    _free: list[int]
+
+    __slots__ = ("_free", "_gens", "_values")
+
+    def __init__(self) -> None:
+        self._values = []
+        self._gens = []
+        self._free = []
 
     # ---------------------------------------------------------
 
