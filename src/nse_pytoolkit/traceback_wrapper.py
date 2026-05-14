@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, overload
 if TYPE_CHECKING:
     from types import TracebackType
 
-__all__ = ["format_exception", "format_exception_spec"]
+__all__ = ("format_exception", "format_exception_spec")
 
 
 @overload

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from contextvars import ContextVar
 from typing import ClassVar, Self
 
-__all__ = ["ContextStack", "EntryCounter", "EntryGuard", "ReentryCounter", "ReentryGuard", "StackFrame"]
+__all__ = ("ContextStack", "EntryCounter", "EntryGuard", "ReentryCounter", "ReentryGuard", "StackFrame")
 
 class StackFrame[T]:
     value: T

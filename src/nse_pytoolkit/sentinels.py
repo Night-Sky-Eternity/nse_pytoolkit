@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from typing import Literal
 
-__all__ = ["FREE", "MISSING", "FreeType", "MissingType"]
+__all__ = ("FREE", "MISSING", "FreeType", "MissingType")
 
 
 class Sentinel(Enum):

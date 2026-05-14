@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Protocol, Self, runtime_checkable
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-__all__ = ["Ring", "SupportsKeysAndGetitem"]
+__all__ = ("Ring", "SupportsKeysAndGetitem")
 
 
 @runtime_checkable

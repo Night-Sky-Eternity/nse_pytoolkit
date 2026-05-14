@@ -1,12 +1,11 @@
-from dataclasses import dataclass
 import threading
 from collections.abc import Iterator, Sized
+from dataclasses import dataclass
 from types import GenericAlias
 from typing import Self
 
-__all__ = [
-    "ContextCounter",
-]
+__all__ = ("ContextCounter",)
+
 
 class ContextCounter(Iterator[int], Sized):
     """Return an independent thread-safe counter. Call next() on it to get sequential IDs."""
@@ -28,6 +27,7 @@ class ContextCounter(Iterator[int], Sized):
         with self._lock:
             self._count += 1
             return self._count
+
 
 class Guarded:
     """A value protected by a lock. The lock must be held to access the value."""

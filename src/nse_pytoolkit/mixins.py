@@ -3,7 +3,7 @@ from collections.abc import Iterator, KeysView, Mapping
 
 from .protocols import SupportsKeysAndGetitem
 
-__all__ = ["MappingMixin"]
+__all__ = ("MappingMixin",)
 
 
 class MappingMixin[K, V](SupportsKeysAndGetitem[K, V], Mapping[K, V], ABC):

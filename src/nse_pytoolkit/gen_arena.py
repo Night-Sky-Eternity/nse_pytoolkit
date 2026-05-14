@@ -2,14 +2,14 @@ from dataclasses import dataclass, field
 
 from .sentinels import FREE, MISSING, FreeType
 
-__all__ = [
+__all__ = (
     "ArenaError",
     "ArenaIndexHandleError",
     "FreeSlotError",
     "GenArena",
     "GenerationMismatchHandleError",
     "Handle",
-]
+)
 
 type Handle = tuple[int, int]
 

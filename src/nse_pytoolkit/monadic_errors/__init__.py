@@ -1,5 +1,5 @@
 from .checks import is_error, is_okay
 from .classes import Err, Ok, Result
-from .decorator import catches
+from .decorator import AddedCatches, Catches, add_catches, catches
 
-__all__ = ["Err", "Ok", "Result", "catches", "is_error", "is_okay"]
+__all__ = ("AddedCatches", "Catches", "Err", "Ok", "Result", "add_catches", "catches", "is_error", "is_okay")
