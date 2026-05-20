@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, TypeIs, overload
 from .classes import Err, Ok, Result
 
 if TYPE_CHECKING:
-    from ..aliases import NotEmptyTuple
+    from ..aliases import NotEmptyTuple  # noqa: TID252
 
 
 @overload
