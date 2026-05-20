@@ -25,7 +25,7 @@ class Tracker[T]:
     ) -> None:
         self.function = function
         self.dependencies = set(dependencies)
-        self.cache_key = (self, cache_key) if cache_key else self
+        self.cache_key = cache_key or self
 
     def get(self, db: DataBase) -> T:
         return db.get_tracker(self)
@@ -82,4 +82,4 @@ class ArgTrackerFactory[**P, R]:
     def cache_key(self, *args: P.args, **kwargs: P.kwargs) -> Hashable:
         bound = inspect.signature(self.func).bind(None, *args, **kwargs)
         bound.apply_defaults()
-        return *bound.args[1:], *bound.kwargs.items()
+        return self, *bound.args[1:], *bound.kwargs.items()
