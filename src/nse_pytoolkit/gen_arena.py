@@ -1,3 +1,4 @@
+# nse_pytoolkit/gen_arena.py
 from .sentinels import FREE, MISSING, FreeType
 
 __all__ = (

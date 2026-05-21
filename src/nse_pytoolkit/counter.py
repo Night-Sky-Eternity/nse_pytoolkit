@@ -1,3 +1,4 @@
+# nse_pytoolkit/counter.py
 import threading
 from collections.abc import Iterator, Sized
 from typing import Self

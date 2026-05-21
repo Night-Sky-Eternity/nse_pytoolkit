@@ -1,3 +1,4 @@
+# nse_pytoolkit/context.py
 from abc import ABC, abstractmethod
 from contextvars import ContextVar
 from typing import ClassVar, Self

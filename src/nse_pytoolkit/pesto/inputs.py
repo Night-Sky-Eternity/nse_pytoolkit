@@ -1,5 +1,4 @@
-# type_checker/pesto/inputs.py
-
+# nse_pytoolkit/pesto/inputs.py
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

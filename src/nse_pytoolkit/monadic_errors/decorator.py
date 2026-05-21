@@ -1,4 +1,4 @@
-# src/monadic_errors/decorator.py
+# nse_pytoolkit/monadic_errors/decorator.py
 import functools
 from typing import TYPE_CHECKING
 

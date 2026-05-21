@@ -1,3 +1,4 @@
+# nse_pytoolkit/protocols.py
 from typing import TYPE_CHECKING, Protocol, Self, runtime_checkable
 
 if TYPE_CHECKING:

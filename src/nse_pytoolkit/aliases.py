@@ -1,3 +1,4 @@
+# nse_pytoolkit/aliases.py
 from collections.abc import Iterable
 
 from .protocols import SupportsKeysAndGetitem

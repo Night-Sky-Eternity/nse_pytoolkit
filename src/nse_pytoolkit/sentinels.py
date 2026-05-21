@@ -1,3 +1,4 @@
+# nse_pytoolkit/sentinels.py
 from enum import Enum, auto
 from typing import Literal
 

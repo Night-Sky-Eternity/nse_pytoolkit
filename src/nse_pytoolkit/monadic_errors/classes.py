@@ -1,4 +1,4 @@
-# src/monadic_errors/classes.py
+# nse_pytoolkit/monadic_errors/classes.py
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Concatenate, Never, Protocol
 

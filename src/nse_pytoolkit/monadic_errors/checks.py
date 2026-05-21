@@ -1,4 +1,4 @@
-# src/monadic_errors/checks.py
+# nse_pytoolkit/monadic_errors/checks.py
 from typing import TYPE_CHECKING, Any, TypeIs, overload
 
 from .classes import Err, Ok, Result
@@ -30,10 +30,7 @@ def is_error[O, E: BaseException](
     if not exc:
         return isinstance(res, Err)
 
-    if is_error(res):
-        return isinstance(res.error, exc)
-
-    return False
+    return isinstance(res, Err) and isinstance(res.error, exc)
 
 
 @overload
@@ -59,7 +56,4 @@ def is_okay[O, E: BaseException](
     if not val:
         return isinstance(res, Ok)
 
-    if is_okay(res):
-        return isinstance(res.value, val)
-
-    return False
+    return isinstance(res, Ok) and isinstance(res.value, val)
