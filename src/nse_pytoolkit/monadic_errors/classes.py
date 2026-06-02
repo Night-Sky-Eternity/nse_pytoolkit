@@ -89,6 +89,20 @@ class Result[O, E: BaseException](Protocol):
         **kwargs: P.kwargs,
     ) -> D | E: ...
 
+    def inspect[**P](
+        self,
+        f: Callable[Concatenate[O, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[O, E]: ...
+
+    def inspect_err[**P](
+        self,
+        f: Callable[Concatenate[E, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Result[O, E]: ...
+
     def __eq__(self, value: object) -> bool: ...
 
     def __hash__(self) -> int: ...
@@ -197,6 +211,23 @@ class Ok[O](Result[O, Never]):
         **kwargs: P.kwargs,
     ) -> D:
         return default_factory(self.value, *args, **kwargs)
+
+    def inspect[**P](
+        self,
+        f: Callable[Concatenate[O, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Ok[O]:
+        f(self.value, *args, **kwargs)
+        return self
+
+    def inspect_err[**P](
+        self,
+        f: Callable[Concatenate[Never, P], Any],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> Ok[O]:
+        return self
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Ok):
@@ -311,6 +342,23 @@ class Err[E: BaseException](Result[Never, E]):
         **kwargs: P.kwargs,  # noqa: ARG002
     ) -> E:
         return self.error
+
+    def inspect[**P](
+        self,
+        f: Callable[Concatenate[Never, P], Any],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> Err[E]:
+        return self
+
+    def inspect_err[**P](
+        self,
+        f: Callable[Concatenate[E, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Err[E]:
+        f(self.error, *args, **kwargs)
+        return self
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Err):
