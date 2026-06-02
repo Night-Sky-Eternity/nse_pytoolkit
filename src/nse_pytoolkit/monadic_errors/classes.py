@@ -28,6 +28,22 @@ class Result[O, E: BaseException](Protocol):
         **kwargs: P.kwargs,
     ) -> Result[U, E]: ...
 
+    def map_or[U, **P](
+        self,
+        default: U,
+        f: Callable[Concatenate[O, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> U: ...
+
+    def map_or_else[U, **P](
+        self,
+        default_f: Callable[[E], U],
+        f: Callable[Concatenate[O, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> U: ...
+
     def map_err[F: BaseException, **P](
         self,
         f: Callable[Concatenate[E, P], F],
@@ -35,9 +51,25 @@ class Result[O, E: BaseException](Protocol):
         **kwargs: P.kwargs,
     ) -> Result[O, F]: ...
 
-    def unwrap(self) -> O: ...
+    def map_err_or[F, **P](
+        self,
+        default: F,
+        f: Callable[Concatenate[E, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> F: ...
 
-    def unwrap_err(self) -> E: ...
+    def map_err_or_else[F, **P](
+        self,
+        default_f: Callable[[O], F],
+        f: Callable[Concatenate[E, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> F: ...
+
+    def unwrap(self, *, msg: str | None = None) -> O: ...
+
+    def unwrap_err(self, *, msg: str | None = None) -> E: ...
 
     def unwrap_or[D](self, default: D) -> O | D: ...
 
@@ -60,6 +92,7 @@ class Result[O, E: BaseException](Protocol):
     def __eq__(self, value: object) -> bool: ...
 
     def __hash__(self) -> int: ...
+
 
 class Ok[O](Result[O, Never]):
     value: O
@@ -93,6 +126,24 @@ class Ok[O](Result[O, Never]):
     ) -> Ok[U]:
         return Ok(f(self.value, *args, **kwargs))
 
+    def map_or[U, **P](
+        self,
+        default: Never,  # noqa: ARG002
+        f: Callable[Concatenate[O, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> U:
+        return f(self.value, *args, **kwargs)
+
+    def map_or_else[U, **P](
+        self,
+        default_f: Callable[[Never], U],  # noqa: ARG002
+        f: Callable[Concatenate[O, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> U:
+        return f(self.value, *args, **kwargs)
+
     def map_err[F: BaseException, **P](
         self,
         f: Callable[Concatenate[Never, P], F],  # noqa: ARG002
@@ -101,12 +152,29 @@ class Ok[O](Result[O, Never]):
     ) -> Ok[O]:
         return self
 
-    def unwrap(self) -> O:
+    def map_err_or[F, **P](
+        self,
+        default: F,
+        f: Callable[Concatenate[Never, P], F],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> F:
+        return default
+
+    def map_err_or_else[F, **P](
+        self,
+        default_f: Callable[[O], F],
+        f: Callable[Concatenate[Never, P], F],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> F:
+        return default_f(self.value)
+
+    def unwrap(self, *, msg: str | None = None) -> O:  # noqa: ARG002
         return self.value
 
-    def unwrap_err(self) -> Never:
-        msg = "called unwrap_err() on Ok"
-        raise UnwrapError(msg)
+    def unwrap_err(self, *, msg: str | None = None) -> Never:
+        raise UnwrapError(msg or "called unwrap_err() on Ok") from None
 
     def unwrap_or(self, default: object) -> O:  # noqa: ARG002
         return self.value
@@ -138,6 +206,7 @@ class Ok[O](Result[O, Never]):
 
     def __hash__(self) -> int:
         return hash((type(Ok), self.value))
+
 
 class Err[E: BaseException](Result[Never, E]):
     error: E
@@ -171,6 +240,24 @@ class Err[E: BaseException](Result[Never, E]):
     ) -> Err[E]:
         return self
 
+    def map_or[U, **P](
+        self,
+        default: U,
+        f: Callable[Concatenate[Never, P], U],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> U:
+        return default
+
+    def map_or_else[U, **P](
+        self,
+        default_f: Callable[[E], U],
+        f: Callable[Concatenate[Never, P], U],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> U:
+        return default_f(self.error)
+
     def map_err[F: BaseException, **P](
         self,
         f: Callable[Concatenate[E, P], F],
@@ -179,11 +266,28 @@ class Err[E: BaseException](Result[Never, E]):
     ) -> Err[F]:
         return Err(f(self.error, *args, **kwargs))
 
-    def unwrap(self) -> Never:
-        msg = "called unwrap() on Err"
-        raise UnwrapError(msg) from self.error
+    def map_err_or[F, **P](
+        self,
+        default: Never,  # noqa: ARG002
+        f: Callable[Concatenate[E, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> F:
+        return f(self.error, *args, **kwargs)
 
-    def unwrap_err(self) -> E:
+    def map_err_or_else[F, **P](
+        self,
+        default_f: Callable[[Never], F],  # noqa: ARG002
+        f: Callable[Concatenate[E, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> F:
+        return f(self.error, *args, **kwargs)
+
+    def unwrap(self, *, msg: str | None = None) -> Never:
+        raise UnwrapError(msg or "called unwrap() on Err") from self.error
+
+    def unwrap_err(self, *, msg: str | None = None) -> E:  # noqa: ARG002
         return self.error
 
     def unwrap_or[D](self, default: D) -> D:
@@ -216,6 +320,7 @@ class Err[E: BaseException](Result[Never, E]):
 
     def __hash__(self) -> int:
         return hash((type(Err), self.error))
+
 
 class UnwrapError(Exception):
     pass
