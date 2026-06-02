@@ -57,6 +57,9 @@ class Result[O, E: BaseException](Protocol):
         **kwargs: P.kwargs,
     ) -> D | E: ...
 
+    def __eq__(self, value: object) -> bool: ...
+
+    def __hash__(self) -> int: ...
 
 class Ok[O](Result[O, Never]):
     value: O
@@ -127,6 +130,14 @@ class Ok[O](Result[O, Never]):
     ) -> D:
         return default_factory(self.value, *args, **kwargs)
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Ok):
+            ok: Ok[Any] = other
+            return self.value == ok.value
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((type(Ok), self.value))
 
 class Err[E: BaseException](Result[Never, E]):
     error: E
@@ -197,6 +208,14 @@ class Err[E: BaseException](Result[Never, E]):
     ) -> E:
         return self.error
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Err):
+            err: Err[Any] = other
+            return self.error == err.error
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((type(Err), self.error))
 
 class UnwrapError(Exception):
     pass
