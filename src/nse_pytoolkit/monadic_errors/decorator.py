@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
-class Catches[E: BaseException]:
+class catches[E: BaseException]:  # noqa: N801
     exceptions: set[type[E]]
 
     __slots__ = ("exceptions",)
@@ -40,11 +40,11 @@ class Catches[E: BaseException]:
 
         return wrapper
 
-    def __or__[F: BaseException](self, other: Catches[F] | type[F]) -> Catches[E | F]:
-        if isinstance(other, Catches):
-            return Catches(*self.exceptions.union(other.exceptions))
+    def __or__[F: BaseException](self, other: catches[F] | type[F]) -> catches[E | F]:
+        if isinstance(other, catches):
+            return catches(*self.exceptions.union(other.exceptions))
         if issubclass(other, BaseException):  # pyright: ignore[reportUnnecessaryIsInstance]
-            return Catches(*self.exceptions, other)
+            return catches(*self.exceptions, other)
         return NotImplemented
 
     __ror__ = __or__
@@ -53,10 +53,6 @@ class Catches[E: BaseException]:
     @staticmethod
     def add[F: BaseException](*exc: type[F]) -> AddedCatches[F]:
         return AddedCatches(*exc)
-
-
-def catches[E: BaseException](*exc: type[E]) -> Catches[E]:
-    return Catches(*exc)
 
 
 class AddedCatches[E: BaseException]:
@@ -96,9 +92,9 @@ class AddedCatches[E: BaseException]:
 
     def __or__[F: BaseException](
         self,
-        other: Catches[F] | type[F],
+        other: catches[F] | type[F],
     ) -> AddedCatches[E | F]:
-        if isinstance(other, Catches):
+        if isinstance(other, catches):
             return AddedCatches(*self.exceptions.union(other.exceptions))
         if issubclass(other, BaseException):  # pyright: ignore[reportUnnecessaryIsInstance]
             return AddedCatches(*self.exceptions, other)
@@ -106,7 +102,3 @@ class AddedCatches[E: BaseException]:
 
     __ror__ = __or__
     __ior__ = __or__
-
-
-def add_catches[E: BaseException](*exc: type[E]) -> AddedCatches[E]:
-    return AddedCatches(*exc)

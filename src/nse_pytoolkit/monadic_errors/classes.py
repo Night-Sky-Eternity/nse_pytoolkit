@@ -1,12 +1,24 @@
 # nse_pytoolkit/monadic_errors/classes.py
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Concatenate, Never, Protocol
+from typing import TYPE_CHECKING, Any, Concatenate, Never, Protocol, Self
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 
 class Result[O, E: BaseException](Protocol):
+    def flatten[U, F: BaseException](
+        self: Result[Result[U, F], E],
+    ) -> Result[U, E | F]: ...
+
+    def then[U, F: BaseException](self, other: Result[U, F]) -> Result[U, E | F]: ...
+
+    def otherwise[U, F: BaseException](self, other: Result[U, F]) -> Result[O | U, F]: ...
+
+    def ok(self) -> Ok[O] | None: ...
+
+    def err(self) -> Err[E] | None: ...
+
     def bind[U, F: BaseException, **P](
         self,
         f: Callable[Concatenate[O, P], Result[U, F]],
@@ -116,20 +128,35 @@ class Ok[O](Result[O, Never]):
     def __init__(self, value: O) -> None:
         self.value = value
 
-    def bind[U, F: BaseException, **P](
+    def flatten[R: Result[Any, Any]](self: Ok[R]) -> R:
+        return self.value
+
+    def then[R: Result[Any, Any]](self, other: R) -> R:
+        return other
+
+    def otherwise(self, other: Result[Any, Any]) -> Self:  # noqa: ARG002
+        return self
+
+    def ok(self) -> Self:
+        return self
+
+    def err(self) -> None:
+        return None
+
+    def bind[R: Result[Any, Any], **P](
         self,
-        f: Callable[Concatenate[O, P], Result[U, F]],
+        f: Callable[Concatenate[O, P], R],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[U, F]:
+    ) -> R:
         return f(self.value, *args, **kwargs)
 
-    def bind_err[U, F: BaseException, **P](
+    def bind_err[R: Result[Any, Any], **P](
         self,
-        f: Callable[Concatenate[Never, P], Result[U, F]],  # noqa: ARG002
+        f: Callable[Concatenate[Never, P], R],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> Ok[O]:
+    ) -> Self:
         return self
 
     def map[U, **P](
@@ -163,7 +190,7 @@ class Ok[O](Result[O, Never]):
         f: Callable[Concatenate[Never, P], F],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> Ok[O]:
+    ) -> Self:
         return self
 
     def map_err_or[F, **P](
@@ -217,7 +244,7 @@ class Ok[O](Result[O, Never]):
         f: Callable[Concatenate[O, P], Any],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Ok[O]:
+    ) -> Self:
         f(self.value, *args, **kwargs)
         return self
 
@@ -226,7 +253,7 @@ class Ok[O](Result[O, Never]):
         f: Callable[Concatenate[Never, P], Any],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> Ok[O]:
+    ) -> Self:
         return self
 
     def __eq__(self, other: object) -> bool:
@@ -247,20 +274,35 @@ class Err[E: BaseException](Result[Never, E]):
     def __init__(self, error: E) -> None:
         self.error = error
 
-    def bind[U, F: BaseException, **P](
-        self,
-        f: Callable[Concatenate[Never, P], Result[U, F]],  # noqa: ARG002
-        *args: P.args,  # noqa: ARG002
-        **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> Err[E]:
+    def flatten(self) -> Self:
         return self
 
-    def bind_err[U, F: BaseException, **P](
+    def then(self, other: Result[Any, Any]) -> Self:  # noqa: ARG002
+        return self
+
+    def otherwise[R: Result[Any, Any]](self, other: R) -> R:
+        return other
+
+    def ok(self) -> None:
+        return None
+
+    def err(self) -> Self:
+        return self
+
+    def bind[R: Result[Any, Any], **P](
         self,
-        f: Callable[Concatenate[E, P], Result[U, F]],
+        f: Callable[Concatenate[Never, P], R],  # noqa: ARG002
+        *args: P.args,  # noqa: ARG002
+        **kwargs: P.kwargs,  # noqa: ARG002
+    ) -> Self:
+        return self
+
+    def bind_err[R: Result[Any, Any], **P](
+        self,
+        f: Callable[Concatenate[E, P], R],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Result[U, F]:
+    ) -> R:
         return f(self.error, *args, **kwargs)
 
     def map[U, **P](
@@ -268,7 +310,7 @@ class Err[E: BaseException](Result[Never, E]):
         f: Callable[Concatenate[Never, P], U],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> Err[E]:
+    ) -> Self:
         return self
 
     def map_or[U, **P](
@@ -348,7 +390,7 @@ class Err[E: BaseException](Result[Never, E]):
         f: Callable[Concatenate[Never, P], Any],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> Err[E]:
+    ) -> Self:
         return self
 
     def inspect_err[**P](
@@ -356,7 +398,7 @@ class Err[E: BaseException](Result[Never, E]):
         f: Callable[Concatenate[E, P], Any],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> Err[E]:
+    ) -> Self:
         f(self.error, *args, **kwargs)
         return self
 
