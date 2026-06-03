@@ -1,131 +1,27 @@
 # nse_pytoolkit/monadic_errors/classes.py
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Concatenate, Never, Protocol, Self
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Generic,
+    Never,
+    Self,
+    TypeVar,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+O_co = TypeVar("O_co", covariant=True)
+E_co = TypeVar("E_co", bound=BaseException, covariant=True)
 
-class Result[O, E: BaseException](Protocol):
-    def flatten[U, F: BaseException](
-        self: Result[Result[U, F], E],
-    ) -> Result[U, E | F]: ...
-
-    def then[U, F: BaseException](self, other: Result[U, F]) -> Result[U, E | F]: ...
-
-    def otherwise[U, F: BaseException](self, other: Result[U, F]) -> Result[O | U, F]: ...
-
-    def ok(self) -> Ok[O] | None: ...
-
-    def err(self) -> Err[E] | None: ...
-
-    def bind[U, F: BaseException, **P](
-        self,
-        f: Callable[Concatenate[O, P], Result[U, F]],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Result[U, E | F]: ...  # rust: and_then
-
-    def bind_err[U, F: BaseException, **P](
-        self,
-        f: Callable[Concatenate[E, P], Result[U, F]],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Result[U | O, F]: ...  # rust: or_else
-
-    def map[U, **P](
-        self,
-        f: Callable[Concatenate[O, P], U],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Result[U, E]: ...
-
-    def map_or[U, **P](
-        self,
-        default: U,
-        f: Callable[Concatenate[O, P], U],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> U: ...
-
-    def map_or_else[U, **P](
-        self,
-        default_f: Callable[[E], U],
-        f: Callable[Concatenate[O, P], U],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> U: ...
-
-    def map_err[F: BaseException, **P](
-        self,
-        f: Callable[Concatenate[E, P], F],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Result[O, F]: ...
-
-    def map_err_or[F, **P](
-        self,
-        default: F,
-        f: Callable[Concatenate[E, P], F],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> F: ...
-
-    def map_err_or_else[F, **P](
-        self,
-        default_f: Callable[[O], F],
-        f: Callable[Concatenate[E, P], F],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> F: ...
-
-    def unwrap(self, *, msg: str | None = None) -> O: ...
-
-    def unwrap_err(self, *, msg: str | None = None) -> E: ...
-
-    def unwrap_or[D](self, default: D) -> O | D: ...
-
-    def unwrap_err_or[D](self, default: D) -> D | E: ...
-
-    def unwrap_or_else[D, **P](
-        self,
-        default_factory: Callable[Concatenate[E, P], D],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> O | D: ...
-
-    def unwrap_err_or_else[D, **P](
-        self,
-        default_factory: Callable[Concatenate[O, P], D],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> D | E: ...
-
-    def inspect[**P](
-        self,
-        f: Callable[Concatenate[O, P], Any],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Result[O, E]: ...
-
-    def inspect_err[**P](
-        self,
-        f: Callable[Concatenate[E, P], Any],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> Result[O, E]: ...
-
-    def __eq__(self, value: object) -> bool: ...
-
-    def __hash__(self) -> int: ...
-
-
-class Ok[O](Result[O, Never]):
-    value: O
+class Ok(Generic[O_co]):  # noqa: UP046
+    value: O_co
 
     __slots__ = ("value",)
 
-    def __init__(self, value: O) -> None:
+    def __init__(self, value: O_co) -> None:
         self.value = value
 
     def flatten[R: Result[Any, Any]](self: Ok[R]) -> R:
@@ -145,7 +41,7 @@ class Ok[O](Result[O, Never]):
 
     def bind[R: Result[Any, Any], **P](
         self,
-        f: Callable[Concatenate[O, P], R],
+        f: Callable[Concatenate[O_co, P], R],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> R:
@@ -161,7 +57,7 @@ class Ok[O](Result[O, Never]):
 
     def map[U, **P](
         self,
-        f: Callable[Concatenate[O, P], U],
+        f: Callable[Concatenate[O_co, P], U],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Ok[U]:
@@ -170,7 +66,7 @@ class Ok[O](Result[O, Never]):
     def map_or[U, **P](
         self,
         default: Never,  # noqa: ARG002
-        f: Callable[Concatenate[O, P], U],
+        f: Callable[Concatenate[O_co, P], U],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> U:
@@ -179,7 +75,7 @@ class Ok[O](Result[O, Never]):
     def map_or_else[U, **P](
         self,
         default_f: Callable[[Never], U],  # noqa: ARG002
-        f: Callable[Concatenate[O, P], U],
+        f: Callable[Concatenate[O_co, P], U],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> U:
@@ -204,20 +100,20 @@ class Ok[O](Result[O, Never]):
 
     def map_err_or_else[F, **P](
         self,
-        default_f: Callable[[O], F],
+        default_f: Callable[[O_co], F],
         f: Callable[Concatenate[Never, P], F],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
     ) -> F:
         return default_f(self.value)
 
-    def unwrap(self, *, msg: str | None = None) -> O:  # noqa: ARG002
+    def unwrap(self, *, msg: str | None = None) -> O_co:  # noqa: ARG002
         return self.value
 
     def unwrap_err(self, *, msg: str | None = None) -> Never:
         raise UnwrapError(msg or "called unwrap_err() on Ok") from None
 
-    def unwrap_or(self, default: object) -> O:  # noqa: ARG002
+    def unwrap_or(self, default: object) -> O_co:  # noqa: ARG002
         return self.value
 
     def unwrap_err_or[D](self, default: D) -> D:
@@ -228,12 +124,12 @@ class Ok[O](Result[O, Never]):
         default_factory: Callable[Concatenate[Never, P], Any],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> O:
+    ) -> O_co:
         return self.value
 
     def unwrap_err_or_else[D, **P](
         self,
-        default_factory: Callable[Concatenate[O, P], D],
+        default_factory: Callable[Concatenate[O_co, P], D],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> D:
@@ -241,7 +137,7 @@ class Ok[O](Result[O, Never]):
 
     def inspect[**P](
         self,
-        f: Callable[Concatenate[O, P], Any],
+        f: Callable[Concatenate[O_co, P], Any],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Self:
@@ -265,13 +161,12 @@ class Ok[O](Result[O, Never]):
     def __hash__(self) -> int:
         return hash((type(Ok), self.value))
 
-
-class Err[E: BaseException](Result[Never, E]):
-    error: E
+class Err(Generic[E_co]):  # noqa: UP046
+    error: E_co
 
     __slots__ = ("error",)
 
-    def __init__(self, error: E) -> None:
+    def __init__(self, error: E_co) -> None:
         self.error = error
 
     def flatten(self) -> Self:
@@ -299,7 +194,7 @@ class Err[E: BaseException](Result[Never, E]):
 
     def bind_err[R: Result[Any, Any], **P](
         self,
-        f: Callable[Concatenate[E, P], R],
+        f: Callable[Concatenate[E_co, P], R],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> R:
@@ -324,7 +219,7 @@ class Err[E: BaseException](Result[Never, E]):
 
     def map_or_else[U, **P](
         self,
-        default_f: Callable[[E], U],
+        default_f: Callable[[E_co], U],
         f: Callable[Concatenate[Never, P], U],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
@@ -333,7 +228,7 @@ class Err[E: BaseException](Result[Never, E]):
 
     def map_err[F: BaseException, **P](
         self,
-        f: Callable[Concatenate[E, P], F],
+        f: Callable[Concatenate[E_co, P], F],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Err[F]:
@@ -342,7 +237,7 @@ class Err[E: BaseException](Result[Never, E]):
     def map_err_or[F, **P](
         self,
         default: Never,  # noqa: ARG002
-        f: Callable[Concatenate[E, P], F],
+        f: Callable[Concatenate[E_co, P], F],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> F:
@@ -351,7 +246,7 @@ class Err[E: BaseException](Result[Never, E]):
     def map_err_or_else[F, **P](
         self,
         default_f: Callable[[Never], F],  # noqa: ARG002
-        f: Callable[Concatenate[E, P], F],
+        f: Callable[Concatenate[E_co, P], F],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> F:
@@ -360,18 +255,18 @@ class Err[E: BaseException](Result[Never, E]):
     def unwrap(self, *, msg: str | None = None) -> Never:
         raise UnwrapError(msg or "called unwrap() on Err") from self.error
 
-    def unwrap_err(self, *, msg: str | None = None) -> E:  # noqa: ARG002
+    def unwrap_err(self, *, msg: str | None = None) -> E_co:  # noqa: ARG002
         return self.error
 
     def unwrap_or[D](self, default: D) -> D:
         return default
 
-    def unwrap_err_or(self, default: object) -> E:  # noqa: ARG002
+    def unwrap_err_or(self, default: object) -> E_co:  # noqa: ARG002
         return self.error
 
     def unwrap_or_else[D, **P](
         self,
-        default_factory: Callable[Concatenate[E, P], D],
+        default_factory: Callable[Concatenate[E_co, P], D],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> D:
@@ -382,7 +277,7 @@ class Err[E: BaseException](Result[Never, E]):
         default_factory: Callable[Concatenate[Never, P], Any],  # noqa: ARG002
         *args: P.args,  # noqa: ARG002
         **kwargs: P.kwargs,  # noqa: ARG002
-    ) -> E:
+    ) -> E_co:
         return self.error
 
     def inspect[**P](
@@ -395,7 +290,7 @@ class Err[E: BaseException](Result[Never, E]):
 
     def inspect_err[**P](
         self,
-        f: Callable[Concatenate[E, P], Any],
+        f: Callable[Concatenate[E_co, P], Any],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> Self:
@@ -411,6 +306,7 @@ class Err[E: BaseException](Result[Never, E]):
     def __hash__(self) -> int:
         return hash((type(Err), self.error))
 
+type Result[O, E: BaseException] = Ok[O] | Err[E]
 
 class UnwrapError(Exception):
     pass
