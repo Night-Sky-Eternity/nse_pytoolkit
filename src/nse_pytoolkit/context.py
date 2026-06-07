@@ -3,17 +3,15 @@ from abc import ABC, abstractmethod
 from contextvars import ContextVar
 from typing import ClassVar, Self
 
-__all__ = ("ContextStack", "EntryCounter", "EntryGuard", "ReentryCounter", "ReentryGuard", "StackFrame")
+from .stack_tools import StackFrame
 
-class StackFrame[T]:
-    value: T
-    parent: StackFrame[T] | None
-
-    __slots__ = ("parent", "value")
-
-    def __init__(self, value: T, parent: StackFrame[T] | None = None) -> None:
-        self.value = value
-        self.parent = parent
+__all__ = (
+    "ContextStack",
+    "EntryCounter",
+    "EntryGuard",
+    "ReentryCounter",
+    "ReentryGuard",
+)
 
 
 class ContextStack(ABC):
