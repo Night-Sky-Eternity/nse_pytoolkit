@@ -1,4 +1,7 @@
 # nse_pytoolkit/monadic_errors/classes.py
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import (
     TYPE_CHECKING,
@@ -18,7 +21,154 @@ E_co = TypeVar("E_co", bound=BaseException, covariant=True)
 
 type Result[O, E: BaseException] = Ok[O] | Err[E]
 
-class Ok(Generic[O_co]):  # noqa: UP046
+
+class _BaseResult(ABC, Generic[O_co, E_co]):  # noqa: UP046
+    """Declaration-only base so `Result` members resolve on the union.
+
+    `Ok` is a `_BaseResult[O_co, Never]` and `Err` is a `_BaseResult[Never, E_co]`,
+    which makes every `Never` that appears in the concrete signatures fall out of
+    the type arguments instead of having to be written twice.
+    """
+
+    __slots__ = ()
+
+    # -- combinators -----------------------------------------------------
+
+    @abstractmethod
+    def flatten(self) -> Result[Any, Any]: ...
+
+    @abstractmethod
+    def then[R: Result[Any, Any]](self, other: R) -> R | Self: ...
+
+    @abstractmethod
+    def otherwise[R: Result[Any, Any]](self, other: R) -> R | Self: ...
+
+    @abstractmethod
+    def ok(self) -> Ok[O_co] | None: ...
+
+    @abstractmethod
+    def err(self) -> Err[E_co] | None: ...
+
+    @abstractmethod
+    def bind[R: Result[Any, Any], **P](
+        self,
+        f: Callable[Concatenate[O_co, P], R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> R | Self: ...
+
+    @abstractmethod
+    def bind_err[R: Result[Any, Any], **P](
+        self,
+        f: Callable[Concatenate[E_co, P], R],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> R | Self: ...
+
+    # -- mapping ---------------------------------------------------------
+
+    @abstractmethod
+    def map[U, **P](
+        self,
+        f: Callable[Concatenate[O_co, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Ok[U] | Self: ...
+
+    @abstractmethod
+    def map_or[U, **P](
+        self,
+        default: U,
+        f: Callable[Concatenate[O_co, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> U: ...
+
+    @abstractmethod
+    def map_or_else[U, **P](
+        self,
+        default_f: Callable[[E_co], U],
+        f: Callable[Concatenate[O_co, P], U],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> U: ...
+
+    @abstractmethod
+    def map_err[F: BaseException, **P](
+        self,
+        f: Callable[Concatenate[E_co, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Err[F] | Self: ...
+
+    @abstractmethod
+    def map_err_or[F, **P](
+        self,
+        default: F,
+        f: Callable[Concatenate[E_co, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> F: ...
+
+    @abstractmethod
+    def map_err_or_else[F, **P](
+        self,
+        default_f: Callable[[O_co], F],
+        f: Callable[Concatenate[E_co, P], F],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> F: ...
+
+    # -- unwrapping ------------------------------------------------------
+
+    @abstractmethod
+    def unwrap(self, *, msg: str | None = None) -> O_co: ...
+
+    @abstractmethod
+    def unwrap_err(self, *, msg: str | None = None) -> E_co: ...
+
+    @abstractmethod
+    def unwrap_or[D](self, default: D) -> O_co | D: ...
+
+    @abstractmethod
+    def unwrap_err_or[D](self, default: D) -> E_co | D: ...
+
+    @abstractmethod
+    def unwrap_or_else[D, **P](
+        self,
+        default_factory: Callable[Concatenate[E_co, P], D],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> O_co | D: ...
+
+    @abstractmethod
+    def unwrap_err_or_else[D, **P](
+        self,
+        default_factory: Callable[Concatenate[O_co, P], D],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> E_co | D: ...
+
+    # -- side effects ----------------------------------------------------
+
+    @abstractmethod
+    def inspect[**P](
+        self,
+        f: Callable[Concatenate[O_co, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Self: ...
+
+    @abstractmethod
+    def inspect_err[**P](
+        self,
+        f: Callable[Concatenate[E_co, P], Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> Self: ...
+
+
+class Ok(_BaseResult[O_co, Never], Generic[O_co]):  # noqa: UP046
     value: O_co
 
     __slots__ = ("value",)
@@ -163,7 +313,8 @@ class Ok(Generic[O_co]):  # noqa: UP046
     def __hash__(self) -> int:
         return hash((type(Ok), self.value))
 
-class Err(Generic[E_co]):  # noqa: UP046
+
+class Err(_BaseResult[Never, E_co], Generic[E_co]):  # noqa: UP046
     error: E_co
 
     __slots__ = ("error",)
@@ -307,6 +458,7 @@ class Err(Generic[E_co]):  # noqa: UP046
 
     def __hash__(self) -> int:
         return hash((type(Err), self.error))
+
 
 class UnwrapError(Exception):
     pass

@@ -5,6 +5,7 @@ description = "Tools and types used throughout Night Sky Eternity projects"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
+license.file = "LICENSE"
 
 [build-system]
 requires = ["hatchling"]
@@ -26,7 +27,7 @@ reportUnknownVariableType = false
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["E501", "D", "PLR2004"]
+ignore = ["CPY001", "E501", "D", "PLR2004"]
 fixable = ["ALL"]
 unfixable = []
 
