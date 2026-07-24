@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 O_co = TypeVar("O_co", covariant=True)
 E_co = TypeVar("E_co", bound=BaseException, covariant=True)
 
+type Result[O, E: BaseException] = Ok[O] | Err[E]
+
 class Ok(Generic[O_co]):  # noqa: UP046
     value: O_co
 
@@ -305,8 +307,6 @@ class Err(Generic[E_co]):  # noqa: UP046
 
     def __hash__(self) -> int:
         return hash((type(Err), self.error))
-
-type Result[O, E: BaseException] = Ok[O] | Err[E]
 
 class UnwrapError(Exception):
     pass

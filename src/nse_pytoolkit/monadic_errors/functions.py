@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING, Any, TypeIs, overload
 from .classes import Err, Ok, Result
 
 if TYPE_CHECKING:
-    from ..aliases import NotEmptyTuple  # noqa: TID252
+    from collections.abc import Iterable
 
+type NotEmptyTuple[T] = tuple[T, *tuple[T, ...]]
 
 @overload
 def is_error[O, E: BaseException](
@@ -57,3 +58,13 @@ def is_okay[O, E: BaseException](
         return isinstance(res, Ok)
 
     return isinstance(res, Ok) and isinstance(res.value, val)
+
+def collect[O, E: BaseException](
+    x: Iterable[Result[O, E]],
+) -> Result[list[O], E]:
+    values: list[O] = []
+    for item in x:
+        if isinstance(item, Err):
+            return item
+        values.append(item.value)
+    return Ok(values)
