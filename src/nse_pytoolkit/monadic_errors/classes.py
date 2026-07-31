@@ -171,6 +171,7 @@ class _BaseResult(ABC, Generic[O_co, E_co]):  # noqa: UP046
 class Ok(_BaseResult[O_co, Never], Generic[O_co]):  # noqa: UP046
     value: O_co
 
+    __match_args__ = ("value",)
     __slots__ = ("value",)
 
     def __init__(self, value: O_co) -> None:
@@ -317,6 +318,7 @@ class Ok(_BaseResult[O_co, Never], Generic[O_co]):  # noqa: UP046
 class Err(_BaseResult[Never, E_co], Generic[E_co]):  # noqa: UP046
     error: E_co
 
+    __match_args__ = ("error",)
     __slots__ = ("error",)
 
     def __init__(self, error: E_co) -> None:
